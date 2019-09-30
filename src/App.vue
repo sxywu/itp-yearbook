@@ -4,18 +4,17 @@
       <!-- gooey effect -->
       <defs>
          <filter id="gooey">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
             <feColorMatrix in="blur" mode="matrix"
               values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" />
          </filter>
       </defs>
-      <!-- <g style='filter: url("#gooey")'> -->
-        <circle v-for='d in nodes' :cx='d.x' :cy='d.y' r='3' :fill='d.color' />
-      <!-- </g> -->
-      <!-- <g v-for='d in years' :transform='`translate(${d.x}, ${height / 2})`'>
-      </g> -->
-      <text v-for='d in years' :x='d.x' :y='height / 2'
-        dy='.35em' text-anchor='middle'>{{ d.year }}</text>
+      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
+        <g style='filter: url("#gooey")'>
+          <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
+        </g>
+        <text text-anchor='middle' dy='.35em'>{{ d.name }}</text>
+      </g>
     </svg>
   </div>
 </template>
@@ -34,44 +33,48 @@ export default {
     return {
       width: window.innerWidth,
       height: window.innerHeight,
+      year: 2012,
       years: [],
-      nodes: [],
+      students: [],
     }
   },
   mounted() {
-    this.xScale = d3.scaleLog().domain([2000, 2020])
-      .range([margin.left, this.width - margin.right])
-    // eventually do vertical by hue or lightness?
-    this.yScale = d3.scaleLinear().domain([1, 0])
-      .range([margin.top, this.height - margin.bottom])
+    const largest = 24
+    this.yScale = d3.scaleLinear().domain([0, 1]).range([2 * largest, -2 * largest])
+    this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 3])
+    this.colorSimulation = d3.forceSimulation()
+      .force('x', d3.forceX(0))
+      .force('y', d3.forceY(0))
+      .force('collide', d3.forceCollide(d => d.r / 2))
+      .stop()
 
-    console.log(this.years)
-    this.nodes = _.chain(data)
-      .filter(d => d.colors)
-      .map(d => {
-        const color = d.colors[0]
-        const x = this.xScale(+d.year)
-        const y = this.yScale(chroma(color).hsl()[2])
+    this.students = _.chain(data)
+      .filter(d => +d.year === this.year && d.colors)
+      .map((d, i) => {
+        const colors = _.map(d.colors, (color, i) => {
+          const lightness = chroma(color).hsl()[2]
+          return {
+            color,
+            x: _.random(-1.5 * largest, 1.5 * largest),
+            y: this.yScale(lightness),
+            r: this.sizeScale(i),
+          }
+        })
+        // simulate
+        this.colorSimulation.nodes(colors).alpha(1)
+        _.times(300, this.colorSimulation.tick())
+
         return {
-          x, y,
-          focusX: x, focusY: this.height / 2,
-          color,
+          colors,
+          name: d.name.split(' ')[0],
+          x: _.random(this.width * 0.1, this.width * 0.9),
+          y: _.random(this.height * 0.25, this.height * 0.75),
         }
       }).value()
 
-    console.log(this.nodes)
-    this.years = _.times(20, i => {
-      const year = 2000 + i
-      return {
-        year,
-        x: this.xScale(year),
-      }
-    })
-
-    this.simulation = d3.forceSimulation(this.nodes)
-      .force('x', d3.forceX().x(d => d.focusX))
-      .force('y', d3.forceY().y(d => d.focusY))
-      .force('collide', d3.forceCollide(3))
+    this.simulation = d3.forceSimulation(this.students)
+      .force('center', d3.forceCenter(this.width / 2, this.height / 2))
+      .force('collide', d3.forceCollide(largest * 2))
   },
 }
 </script>
