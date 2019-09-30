@@ -4,9 +4,9 @@
       <!-- gooey effect -->
       <defs>
          <filter id="gooey">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
             <feColorMatrix in="blur" mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" />
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -14" />
          </filter>
       </defs>
       <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
@@ -33,15 +33,16 @@ export default {
     return {
       width: window.innerWidth,
       height: window.innerHeight,
-      year: 2012,
+      year: 2011,
       years: [],
       students: [],
     }
   },
   mounted() {
     const largest = 24
-    this.yScale = d3.scaleLinear().domain([0, 1]).range([2 * largest, -2 * largest])
     this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 3])
+    this.yScale = d3.scaleLinear().domain([0, 1]).range([1.5 * largest, -1.5 * largest])
+    this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 4])
     this.colorSimulation = d3.forceSimulation()
       .force('x', d3.forceX(0))
       .force('y', d3.forceY(0))
@@ -64,20 +65,32 @@ export default {
         this.colorSimulation.nodes(colors).alpha(1)
         _.times(300, this.colorSimulation.tick())
 
+        const [hue, saturation, lightness] = chroma.average(d.colors, 'hsl').hsl()
+        let x = ((hue || 0 + 120) % 360) / 360
+        x = x * this.width * 0.2 + this.width * 0.4
+        const y = (1 - lightness) * this.height * 0.1 + this.height * 0.45
         return {
           colors,
           name: d.name.split(' ')[0],
-          x: _.random(this.width * 0.1, this.width * 0.9),
-          y: _.random(this.height * 0.25, this.height * 0.75),
+          x, y,
+          // forceX: x, forceY: y,
+          // x: _.random(this.width * 0.4, this.width * 0.6),
+          // y: _.random(this.height * 0.45, this.height * 0.55),
         }
       }).value()
 
     this.simulation = d3.forceSimulation(this.students)
       .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-      .force('collide', d3.forceCollide(largest * 2))
+      // .force('x', d3.forceX(d => d.forceX))
+      // .force('y', d3.forceY(d => d.forceY))
+      .force('collide', d3.forceCollide(2 * largest))
+      // .force('charge', d3.forceManyBody())
   },
 }
 </script>
 
 <style scoped>
+text {
+  font-size: 12px;
+}
 </style>
