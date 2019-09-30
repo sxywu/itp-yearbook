@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <svg :width='width' :height='height'>
+    <svg :width='width' :height='height' @mousemove='onHover'>
       <!-- gooey effect -->
       <defs>
          <filter id="gooey">
@@ -16,6 +16,15 @@
         <text text-anchor='middle' dy='.35em'>{{ d.name }}</text>
       </g>
     </svg>
+    <!-- IMAGE -->
+    <div v-if='hovered' :style='{
+      position: `absolute`,
+      top: hovered.y + 2.5 * largest,
+      left: hovered.x,
+      transform: `translate(-50%, 0)`,
+    }'>
+      <img :src='hovered.image' />
+    </div>
   </div>
 </template>
 
@@ -24,7 +33,9 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 import chroma from 'chroma-js'
 import data from '../data/studentsWithPhotos.json'
+import images from '../data/photos/*/*.*'
 
+const largest = 24
 const margin = {left: 20, top: 20, right: 20, bottom: 20}
 
 export default {
@@ -36,13 +47,13 @@ export default {
       year: 2011,
       years: [],
       students: [],
+      hovered: null,
+      largest,
     }
   },
   mounted() {
-    const largest = 24
-    this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 3])
     this.yScale = d3.scaleLinear().domain([0, 1]).range([1.5 * largest, -1.5 * largest])
-    this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 4])
+    this.sizeScale = d3.scaleLinear().domain([0, 4]).range([largest, largest / 2])
     this.colorSimulation = d3.forceSimulation()
       .force('x', d3.forceX(0))
       .force('y', d3.forceY(0))
@@ -73,6 +84,7 @@ export default {
           colors,
           name: d.name.split(' ')[0],
           x, y,
+          image: _.values(images[d.year][d.netID])[0],
           // forceX: x, forceY: y,
           // x: _.random(this.width * 0.4, this.width * 0.6),
           // y: _.random(this.height * 0.45, this.height * 0.55),
@@ -85,6 +97,15 @@ export default {
       // .force('y', d3.forceY(d => d.forceY))
       .force('collide', d3.forceCollide(2 * largest))
       // .force('charge', d3.forceManyBody())
+  },
+  methods: {
+    onHover(e) {
+      const {clientX, clientY} = e
+      const hovered = this.simulation.find(clientX, clientY, 2 * largest)
+      if (hovered !== this.hovered) {
+        this.hovered = hovered
+      }
+    },
   },
 }
 </script>
