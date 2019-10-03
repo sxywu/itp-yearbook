@@ -54,7 +54,6 @@ export default {
       students: [],
       hovered: null,
       largest,
-      clipPath,
     }
   },
   mounted() {
