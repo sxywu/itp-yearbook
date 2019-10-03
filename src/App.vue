@@ -1,10 +1,10 @@
 <template>
   <div id="app">
     <Visualization v-bind='{data, width, height, year}'></Visualization>
-    <div class='years'>
-      <span v-for='d in years' @click='year = d.year'>
-        {{ d.year }}
-      </span>
+    <div id='infobox'>
+      <h1>{{ year }}</h1>
+      <br />
+      <Years v-bind='{data, updateYear}' />
     </div>
   </div>
 </template>
@@ -12,48 +12,42 @@
 <script>
 import _ from 'lodash'
 import * as d3 from 'd3'
+
 import Visualization from './Visualization.vue'
+import Years from './Years.vue'
 
 import data from '../data/studentsWithPhotos.json'
 
 export default {
   name: 'app',
-  components: {Visualization},
+  components: {Visualization, Years},
   data() {
     return {
       data: _.map(data, d => Object.assign(d, {year: +d.year})),
       width: window.innerWidth,
       height: window.innerHeight,
-      years: [],
       year: 2011,
+      years: [],
     }
   },
-  mounted() {
-    const years = _.chain(this.data)
-      .map('year').uniq().sortBy().value()
-    this.years = _.map(years, (year, i) => {
-      return {
-        year,
-        // x: (i + 0.5) * (this.width * 0.8) / years.length + this.width * 0.1,
-      }
-    })
+  methods: {
+    updateYear(year) {
+      this.year = year
+    }
   },
 }
 </script>
 
 <style scoped>
-.years {
+#infobox {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
+  top: 20px;
+  left: 20px;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.95);
   text-align: center;
-  padding: 40px 0;
-}
-
-.years span {
-  display: inline-block;
-  padding: 0 10px;
-  cursor: pointer;
+  overflow: visible;
+  padding: 20px;
+  border: 1px solid #333;
 }
 </style>
