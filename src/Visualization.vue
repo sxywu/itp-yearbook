@@ -24,7 +24,7 @@
           <text :y='45' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
         </clipPath>
       </defs>
-      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
+      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y + height / 2})`'>
         <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.name})`'>
           <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
         </g>
@@ -107,22 +107,26 @@ export default {
           }
         }).value()
 
-      const size = 2.5 * largest
-      this.histogram = d3.histogram().value(d => d.hue)
-        .domain([0, 370]).thresholds(_.times(37, i => i * 10))
-      const bins = _.filter(this.histogram(this.students), bin => bin.length)
-      const xOffset = (this.width - bins.length * size) / 2
+      // position students
+      let perColumn = 1
+      let columnPos = 0
+      let x = 0
+      let y = 0
+      const xOffset = 1.5 * largest
+      const yOffset = 3 * largest
+      _.each(this.students, (student, i) => {
+        // first, move y down
+        Object.assign(student, {x, y})
+        y += yOffset
+        columnPos += 1
 
-      _.each(bins, (students, i) => {
-        const yOffset = (this.height - students.length * size) / 2
-        _.chain(students)
-          .sortBy(d => d.lightness)
-          .each((student, j) => {
-            Object.assign(student, {
-              x: (i + 0.5) * size + xOffset,
-              y: this.height * 0.85 - (j + 0.5) * size,
-            })
-          }).value()
+        if (columnPos == perColumn) {
+          // if need to move to next column
+          columnPos = 0
+          perColumn = perColumn + (i < this.students.length / 2 ? 1 : -1)
+          x += xOffset // move to next column
+          y = -(perColumn - 1) / 2 * yOffset
+        }
       })
     }
   },
