@@ -28,19 +28,10 @@
         <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
           <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
         </g>
-        <circle :r='1.25 * largest' opacity='0'
-          @mouseenter='hovered = d' @mouseleave='hovered = null' />
+        <circle :r='1.5 * largest' opacity='0'
+          @mouseenter='updateHovered(d)' @mouseleave='updateHovered(null)' />
       </g>
     </svg>
-    <!-- IMAGE -->
-    <div v-if='hovered' :style='{
-      position: `absolute`,
-      top: hovered.y - 1.5 * largest,
-      left: hovered.x,
-      transform: `translate(-50%, -100%)`,
-    }'>
-      <img :src='hovered.image' />
-    </div>
   </div>
 </template>
 
@@ -55,11 +46,10 @@ const margin = {left: 20, top: 20, right: 20, bottom: 20}
 
 export default {
   name: 'visualization',
-  props: ['data', 'width', 'height', 'year'],
+  props: ['data', 'width', 'height', 'year', 'updateHovered'],
   data() {
     return {
       students: [],
-      hovered: null,
       largest,
     }
   },
@@ -109,7 +99,7 @@ export default {
         }).value()
 
       // position students
-      const xPadding = 2 * largest
+      const xPadding = 2.5 * largest
       const yPadding = 3 * largest
       // figure out max number given height restriction
       let perColumn = Math.floor((this.width - 1.5 * yPadding - 200) / yPadding)
@@ -119,7 +109,7 @@ export default {
       const xOffset = (this.width - perRow * xPadding + 100) / 2
       const yOffset = (this.height - perColumn * yPadding + 100) / 2
       _.chain(this.students)
-        // .sortBy(d => d.hue)
+        .sortBy(d => d.hue)
         .each((student, i) => {
           const column = Math.floor(i / perColumn)
           const x = column * xPadding +xOffset
@@ -134,7 +124,7 @@ export default {
 
 <style scoped>
 text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   text-transform: uppercase;
   /* fill: #fff; */

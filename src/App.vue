@@ -1,10 +1,17 @@
 <template>
   <div id="app">
-    <Visualization v-bind='{data, width, height, year}'></Visualization>
+    <Visualization v-bind='{data, width, height, year, updateHovered}'></Visualization>
     <div id='infobox'>
-      <h1>{{ year }}</h1>
-      <br />
-      <Years v-bind='{data, updateYear}' />
+      <div id='years'>
+        <h1>{{ year }}</h1>
+        <br />
+        <Years v-bind='{data, updateYear}' />
+      </div>
+      <!-- HOVER -->
+      <div v-if='hovered' id='hovered'>
+        <img :src='hovered.image' width='100%' />
+        <div class='name'>{{ hovered.name }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -27,13 +34,16 @@ export default {
       width: window.innerWidth,
       height: window.innerHeight,
       year: 2011,
-      years: [],
+      hovered: null,
     }
   },
   methods: {
     updateYear(year) {
       this.year = year
-    }
+    },
+    updateHovered(hovered) {
+      this.hovered = hovered
+    },
   },
 }
 </script>
@@ -43,11 +53,29 @@ export default {
   position: absolute;
   top: 20px;
   left: 20px;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.95);
   text-align: center;
   overflow: visible;
+}
+
+#years, #hovered {
+  background: rgba(255, 255, 255, 0.95);
   padding: 20px;
   border: 1px solid #333;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+#hovered {
+  pointer-events: none;
+}
+
+#hovered .name {
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #fff;
+  position: absolute;
+  left: 50%;
+  bottom: 25px;
+  transform: translate(-50%, 0);
 }
 </style>
