@@ -6,7 +6,7 @@
         <filter id="gooey">
           <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
           <feColorMatrix in="blur" mode="matrix"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -14" />
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 17 -8" />
         </filter>
         <!-- petal shape clip path -->
         <clipPath v-for='d in students' :id='`flowerClip${d.netID}`'>
@@ -24,13 +24,14 @@
           <text :y='45' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
         </clipPath>
       </defs>
-      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
-        <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
-          <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
-        </g>
-        <circle :r='1.5 * largest' opacity='0'
-          @mouseenter='updateHovered(d)' @mouseleave='updateHovered(null)' />
+      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'
+        style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
+        <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r'
+          :fill='c.color' :opacity='c.opacity' />
       </g>
+      <circle v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'
+        :r='1.5 * largest' opacity='0'
+        @mouseenter='updateHovered(d)' @mouseleave='updateHovered(null)' />
     </svg>
   </div>
 </template>
@@ -40,6 +41,7 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 import chroma from 'chroma-js'
 import images from '../data/photos/*/*.*'
+import {TweenMax} from 'gsap'
 
 const largest = 60
 const margin = {left: 20, top: 20, right: 20, bottom: 20}
@@ -54,7 +56,7 @@ export default {
     }
   },
   mounted() {
-    this.yScale = d3.scaleLinear().domain([0, 1]).range([0.25 * largest, -0.25 * largest])
+    this.yScale = d3.scaleLinear().domain([0, 1]).range([0.5 * largest, -0.5 * largest])
     this.sizeScale = d3.scaleLog().domain([1, 5]).range([largest, largest / 6])
     this.colorSimulation = d3.forceSimulation()
       .force('x', d3.forceX(0))
@@ -63,10 +65,12 @@ export default {
       .stop()
 
     this.calculateData()
+    this.animateIn()
   },
   watch: {
     year() {
       this.calculateData()
+      this.animateIn()
     },
   },
   methods: {
@@ -74,18 +78,22 @@ export default {
       this.students = _.chain(this.data)
         .filter(d => +d.year === this.year && d.colors)
         .map((d, i) => {
-          const colors = _.map(d.colors, (color, i) => {
+          const colors = _.map(d.colors, (color, j) => {
             const lightness = chroma(color).hsl()[2]
             return {
               color: chroma(color).saturate(0.75),
-              x: _.random(-0.25 * largest, 0.25 * largest),
-              y: this.yScale(lightness),
-              r: this.sizeScale(i + 1),
+              x: _.random(-0.5 * largest, 0.5 * largest),
+              y: _.random(largest, 2 * largest),
+              toX: _.random(-0.5 * largest, 0.5 * largest),
+              toY: this.yScale(lightness),
+              r: this.sizeScale(j + 1),
+              opacity: 0,
+              delay: (4 - j) * 0.25 + i * 0.05,
             }
           })
           // simulate
-          this.colorSimulation.nodes(colors).alpha(1)
-          _.times(300, this.colorSimulation.tick())
+          // this.colorSimulation.nodes(colors).alpha(1)
+          // _.times(300, this.colorSimulation.tick())
 
           const [hue, saturation, lightness] = chroma(d.colors[0]).hsl()
           return {
@@ -97,6 +105,7 @@ export default {
             netID: d.netID,
           }
         }).value()
+      this.colors = _.chain(this.students).map('colors').flatten().value().reverse()
 
       // position students
       const xPadding = 2.5 * largest
@@ -117,7 +126,18 @@ export default {
           y += (column % 2 ? 0 : yPadding / 2) // offset by column
           Object.assign(student, {x, y})
         }).value()
-    }
+    },
+    animateIn() {
+      TweenMax.staggerTo(this.colors, 1, {
+        opacity: 1,
+        cycle: {
+          x: i => this.colors[i].toX,
+          y: i => this.colors[i].toY,
+        },
+        stagger: (i) => this.colors[i].delay,
+        ease: Power2.easeOut,
+      })
+    },
   },
 }
 </script>
