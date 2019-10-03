@@ -9,18 +9,19 @@
               values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -14" />
          </filter>
          <!-- petal shape clip path -->
-         <clipPath id='flowerClip'>
-           <path d="M.41,64.39C-.69,55,4.16,47.06,7.89,42.76c2.72-3.14-1.78,1.35,3.74,9.89,4.06,6.28,9.45,7.5,9.45,15.25A8.26,8.26,0,0,1,12.26,76,12.92,12.92,0,0,1,.41,64.39Z" transform='translate(-30, -63)' />
-            <path d="M23.66,75a.22.22,0,0,1-.2-.39c2.86-2.55,5.27-4.65,4.48-10.39-.85-6.18-10.29-9.7-11.33-20.68s5.44-21.17,9.87-24.36c2.52-1.81-2.93.89,4.39,12.43,7.76,12.25,13.62,14.06,13.62,23C44.49,60.7,38.83,71.89,23.66,75Z" transform='translate(-30, -63)'/>
-            <path d="M37.67,74.53c-.25-.07-.33-.39-.08-.49,6.94-3,11.49-6.69,12.95-14.71.66-3.59,1.35-8.78-1.46-13.41-3.17-5.23.71-2,4.94,2C58.7,52.44,62.37,58.2,60,66.16,57,76,44.49,76.54,37.67,74.53Z" transform='translate(-30, -63)'/>
-            <path d="M13.67,82.31a.76.76,0,0,1,.7-.94c5.66-.47,31.78-1.8,32.74,0S41,99.55,40.05,99.89s-17.55.61-18.79,0C19.32,98.93,14.5,86.43,13.67,82.31Z" transform='translate(-30, -63)'/>
+         <clipPath v-for='d in students' :id='`flowerClip${d.name}`'>
+           <path d="M.41,64.39C-.69,55,4.16,47.06,7.89,42.76c2.72-3.14-1.78,1.35,3.74,9.89,4.06,6.28,9.45,7.5,9.45,15.25A8.26,8.26,0,0,1,12.26,76,12.92,12.92,0,0,1,.41,64.39Z" transform='translate(-30, -75)' />
+            <path d="M23.66,75a.22.22,0,0,1-.2-.39c2.86-2.55,5.27-4.65,4.48-10.39-.85-6.18-10.29-9.7-11.33-20.68s5.44-21.17,9.87-24.36c2.52-1.81-2.93.89,4.39,12.43,7.76,12.25,13.62,14.06,13.62,23C44.49,60.7,38.83,71.89,23.66,75Z" transform='translate(-30, -75)'/>
+            <path d="M37.67,74.53c-.25-.07-.33-.39-.08-.49,6.94-3,11.49-6.69,12.95-14.71.66-3.59,1.35-8.78-1.46-13.41-3.17-5.23.71-2,4.94,2C58.7,52.44,62.37,58.2,60,66.16,57,76,44.49,76.54,37.67,74.53Z" transform='translate(-30, -75)'/>
+            <path d="M13.67,82.31a.76.76,0,0,1,.7-.94c5.66-.47,31.78-1.8,32.74,0S41,99.55,40.05,99.89s-17.55.61-18.79,0C19.32,98.93,14.5,86.43,13.67,82.31Z" transform='translate(-30, -75)'/>
+            <!-- student name -->
+            <text :y='38' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
          </clipPath>
       </defs>
       <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
-        <g style='filter: url("#gooey")' clip-path='url(#flowerClip)'>
+        <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.name})`'>
           <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
         </g>
-        <text :y='largest' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
         <circle :r='1.25 * largest' opacity='0'
           @mouseenter='hovered = d' @mouseleave='hovered = null' />
       </g>
@@ -43,7 +44,7 @@ import * as d3 from 'd3'
 import chroma from 'chroma-js'
 import images from '../data/photos/*/*.*'
 
-const largest = 50
+const largest = 60
 const margin = {left: 20, top: 20, right: 20, bottom: 20}
 
 export default {
@@ -57,8 +58,8 @@ export default {
     }
   },
   mounted() {
-    this.yScale = d3.scaleLinear().domain([0, 1]).range([0.5 * largest, -0.5 * largest])
-    this.sizeScale = d3.scaleLog().domain([1, 5]).range([largest, largest / 10])
+    this.yScale = d3.scaleLinear().domain([0, 1]).range([0.25 * largest, -0.25 * largest])
+    this.sizeScale = d3.scaleLog().domain([1, 5]).range([largest, largest / 6])
     this.colorSimulation = d3.forceSimulation()
       .force('x', d3.forceX(0))
       .force('y', d3.forceY(0))
@@ -80,8 +81,8 @@ export default {
           const colors = _.map(d.colors, (color, i) => {
             const lightness = chroma(color).hsl()[2]
             return {
-              color: chroma(color).saturate(0.5),
-              x: _.random(-0.5 * largest, 0.5 * largest),
+              color: chroma(color).saturate(0.75),
+              x: _.random(-0.25 * largest, 0.25 * largest),
               y: this.yScale(lightness),
               r: this.sizeScale(i + 1),
             }
