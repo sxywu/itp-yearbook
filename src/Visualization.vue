@@ -9,7 +9,7 @@
             values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -14" />
         </filter>
         <!-- petal shape clip path -->
-        <clipPath v-for='d in students' :id='`flowerClip${d.name}`'>
+        <clipPath v-for='d in students' :id='`flowerClip${d.netID}`'>
           <!-- petals -->
           <path d="M.41,64.39C-.69,55,4.16,47.06,7.89,42.76c2.72-3.14-1.78,1.35,3.74,9.89,4.06,6.28,9.45,7.5,9.45,15.25A8.26,8.26,0,0,1,12.26,76,12.92,12.92,0,0,1,.41,64.39Z" transform='translate(-30, -70)' />
           <path d="M23.66,75a.22.22,0,0,1-.2-.39c2.86-2.55,5.27-4.65,4.48-10.39-.85-6.18-10.29-9.7-11.33-20.68s5.44-21.17,9.87-24.36c2.52-1.81-2.93.89,4.39,12.43,7.76,12.25,13.62,14.06,13.62,23C44.49,60.7,38.83,71.89,23.66,75Z" transform='translate(-30, -70)'/>
@@ -24,8 +24,8 @@
           <text :y='45' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
         </clipPath>
       </defs>
-      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y + height / 2})`'>
-        <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.name})`'>
+      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'>
+        <g style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
           <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r' :fill='c.color' />
         </g>
         <circle :r='1.25 * largest' opacity='0'
@@ -104,30 +104,29 @@ export default {
             image: _.values(images[d.year][d.netID])[0],
             hue: ((hue + 120) % 360 + 10) || 0,
             lightness,
+            netID: d.netID,
           }
         }).value()
 
       // position students
-      let perColumn = 1
-      let columnPos = 0
-      let x = 0
-      let y = 0
-      const xOffset = 1.5 * largest
-      const yOffset = 3 * largest
-      _.each(this.students, (student, i) => {
-        // first, move y down
-        Object.assign(student, {x, y})
-        y += yOffset
-        columnPos += 1
-
-        if (columnPos == perColumn) {
-          // if need to move to next column
-          columnPos = 0
-          perColumn = perColumn + (i < this.students.length / 2 ? 1 : -1)
-          x += xOffset // move to next column
-          y = -(perColumn - 1) / 2 * yOffset
-        }
-      })
+      const xPadding = 2 * largest
+      const yPadding = 3 * largest
+      // figure out max number given height restriction
+      let perColumn = Math.floor((this.width - 1.5 * yPadding - 200) / yPadding)
+      // take minimum between perColumn and square root number
+      perColumn = Math.min(perColumn, Math.floor(Math.sqrt(this.students.length)))
+      const perRow = Math.ceil(this.students.length / perColumn)
+      const xOffset = (this.width - perRow * xPadding + 100) / 2
+      const yOffset = (this.height - perColumn * yPadding + 100) / 2
+      _.chain(this.students)
+        // .sortBy(d => d.hue)
+        .each((student, i) => {
+          const column = Math.floor(i / perColumn)
+          const x = column * xPadding +xOffset
+          let y = (i % perColumn) * yPadding + yOffset
+          y += (column % 2 ? 0 : yPadding / 2) // offset by column
+          Object.assign(student, {x, y})
+        }).value()
     }
   },
 }
