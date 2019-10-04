@@ -55,6 +55,7 @@ export default {
   left: 20px;
   text-align: center;
   overflow: visible;
+  pointer-events: none;
 }
 
 #years, #hovered {
@@ -63,10 +64,6 @@ export default {
   border: 1px solid #333;
   position: relative;
   margin-bottom: 10px;
-}
-
-#hovered {
-  pointer-events: none;
 }
 
 #hovered .name {

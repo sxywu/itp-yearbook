@@ -3,7 +3,7 @@
     <g v-for='d in years' :transform='`translate(${d.x}, ${d.y})`'>
       <rect :x='-xPadding / 2' :y='-yPadding / 2' :width='xPadding' :height='yPadding'
         stroke='#fff' stroke-width='2' :opacity='d.opacity'
-        :fill='d.year === year ? d.color : `#333`' 
+        :fill='d.year === year ? d.color : `#333`'
         @click='updateYear(d.year)' />
     </g>
     <text v-for='n in 4' :x='1.5 * xPadding - 3' :y='(n - 0.5) * yPadding'
@@ -58,5 +58,6 @@ text {
 }
 rect {
   cursor: pointer;
+  pointer-events: auto;
 }
 </style>
