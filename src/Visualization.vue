@@ -69,8 +69,10 @@ export default {
   },
   watch: {
     year() {
-      this.calculateData()
-      this.animateIn()
+      this.animateOut(() => {
+        this.calculateData()
+        this.animateIn()
+      })
     },
   },
   methods: {
@@ -88,12 +90,10 @@ export default {
               toY: this.yScale(lightness),
               r: this.sizeScale(j + 1),
               opacity: 0,
-              delay: (4 - j) * 0.25 + i * 0.05,
+              fadeIn: (4 - j) * 0.4 + i * 0.01,
+              fadeOut: i * 0.01,
             }
           })
-          // simulate
-          // this.colorSimulation.nodes(colors).alpha(1)
-          // _.times(300, this.colorSimulation.tick())
 
           const [hue, saturation, lightness] = chroma(d.colors[0]).hsl()
           return {
@@ -134,8 +134,22 @@ export default {
           x: i => this.colors[i].toX,
           y: i => this.colors[i].toY,
         },
-        stagger: (i) => this.colors[i].delay,
+        stagger: (i) => this.colors[i].fadeIn,
         ease: Power2.easeOut,
+      })
+    },
+    animateOut(callback) {
+      let index = 0
+      TweenMax.staggerTo(this.colors, 0.5, {
+        opacity: 0,
+        ease: Power2.easeOut,
+        stagger: (i) => this.colors[i].fadeOut,
+        onComplete: () => {
+          index += 1
+          if (index === this.colors.length) {
+            callback()
+          }
+        },
       })
     },
   },
