@@ -2,7 +2,8 @@
   <svg :width='11.5 * xPadding' :height='4 * yPadding'>
     <g v-for='d in years' :transform='`translate(${d.x}, ${d.y})`'>
       <rect :x='-xPadding / 2' :y='-yPadding / 2' :width='xPadding' :height='yPadding'
-        stroke='#fff' stroke-width='2' fill='#333' :opacity='d.opacity'
+        stroke='#fff' stroke-width='2' :opacity='d.opacity'
+        :fill='d.year === year ? d.color : `#333`' 
         @click='updateYear(d.year)' />
     </g>
     <text v-for='n in 4' :x='1.5 * xPadding - 3' :y='(n - 0.5) * yPadding'
@@ -19,7 +20,7 @@ const xPadding = 20
 const yPadding = 30
 export default {
   name: 'years',
-  props: ['data', 'updateYear'],
+  props: ['data', 'year', 'updateYear'],
   data() {
     return {
       years: [],

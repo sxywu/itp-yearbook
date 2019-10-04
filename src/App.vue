@@ -5,7 +5,7 @@
       <div id='years'>
         <h1>{{ year }}</h1>
         <br />
-        <Years v-bind='{data, updateYear}' />
+        <Years v-bind='{data, year, updateYear}' />
       </div>
       <!-- HOVER -->
       <div v-if='hovered' id='hovered'>
@@ -33,7 +33,7 @@ export default {
       data: _.map(data, d => Object.assign(d, {year: +d.year})),
       width: window.innerWidth,
       height: window.innerHeight,
-      year: 2011,
+      year: 2019,
       hovered: null,
     }
   },
