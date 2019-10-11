@@ -1,17 +1,9 @@
 <template>
   <div id="app">
-    <Visualization v-bind='{data, width, height, year, updateHovered}'></Visualization>
-    <div id='infobox'>
-      <div id='years'>
-        <h1>{{ year }}</h1>
-        <br />
-        <Years v-bind='{data, year, updateYear}' />
-      </div>
-      <!-- HOVER -->
-      <div v-if='hovered' id='hovered'>
-        <img :src='hovered.image' width='100%' />
-        <div class='name'>{{ hovered.name }}</div>
-      </div>
+    <Visualization v-bind='{data, width, height, year, student}'></Visualization>
+    <div id='inputs'>
+      <input id='name' type='text' placeholder='search for a student' v-model='student' />
+      in class of <input id='year' type='text' v-model.number='year' />
     </div>
   </div>
 </template>
@@ -33,6 +25,7 @@ export default {
       data: _.map(data, d => Object.assign(d, {year: +d.year})),
       width: window.innerWidth,
       height: window.innerHeight,
+      student: '',
       year: 2019,
       hovered: null,
     }
@@ -49,30 +42,24 @@ export default {
 </script>
 
 <style scoped>
-#infobox {
+#inputs {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  text-align: center;
-  overflow: visible;
-  pointer-events: none;
-}
-
-#years, #hovered {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 20px;
-  border: 1px solid #333;
-  position: relative;
-  margin-bottom: 10px;
-}
-
-#hovered .name {
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #fff;
-  position: absolute;
+  bottom: 80px;
   left: 50%;
-  bottom: 25px;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, 0%);
+  font-size: 36px;
+  background: #fff;
+}
+
+input {
+  padding: 2px 10px;
+  font-family: 'Playfair Display';
+  font-size: 36px;
+  border: 1px solid;
+  text-align: center;
+}
+
+#year {
+  width: 112px;
 }
 </style>
