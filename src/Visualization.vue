@@ -65,9 +65,6 @@ export default {
       .force('collide', d3.forceCollide(d => d.r * 0.75))
       .stop()
 
-    d3.select(this.$refs.container)
-      .call(d3.drag().on('drag', this.dragContainer))
-
     this.calculateData()
     this.animateIn()
   },
