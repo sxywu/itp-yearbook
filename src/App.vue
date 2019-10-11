@@ -1,9 +1,8 @@
 <template>
   <div id="app">
-    <Visualization v-bind='{data, width, height, year, student}'></Visualization>
+    <Visualization v-bind='{data, width, height, student}'></Visualization>
     <div id='inputs'>
-      <input id='name' type='text' placeholder='search for a student' v-model='student' />
-      in class of <input id='year' type='text' v-model.number='year' />
+      <input id='name' type='text' placeholder='red burns' v-model='student' />
     </div>
   </div>
 </template>
@@ -25,7 +24,6 @@ export default {
       width: window.innerWidth,
       height: window.innerHeight,
       student: '',
-      year: 2019,
     }
   },
 }
@@ -34,7 +32,7 @@ export default {
 <style scoped>
 #inputs {
   position: absolute;
-  bottom: 80px;
+  bottom: 120px;
   left: 50%;
   transform: translate(-50%, 0%);
   font-size: 36px;
@@ -47,6 +45,7 @@ input {
   font-size: 36px;
   border: 1px solid;
   text-align: center;
+  width: 800px;
 }
 
 #year {

@@ -20,11 +20,11 @@
         <circle class="cls-1" cx="6" cy="32" r="2" transform='translate(-30, -70)'/>
         <circle class="cls-1" cx="43" cy="28" r="1.5" transform='translate(-30, -70)'/>
         <!-- student name -->
-        <text :y='45' text-anchor='middle' dy='.35em'>{{ d.name }}</text>
+        <text :y='45' text-anchor='middle' dy='.35em'>{{ d.name }} '{{ d.year }}</text>
       </clipPath>
     </defs>
     <g :transform='`translate(${translate.x}, ${translate.y})`'>
-      <image v-for='d in students' :key='`image${d.netID}`' :xlink:href='d.image' :opacity='expanded ? 1 : 0'
+      <image v-if='expanded' v-for='d in students' :key='`image${d.netID}`' :xlink:href='d.image'
         :transform='`translate(${d.x - d.imageWidth + 10}, ${d.y - d.imageHeight + 20})`' />
       <g v-for='d in students' :key='`gooey${d.netID}`' :transform='`translate(${d.x}, ${d.y})`'
         style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
@@ -47,7 +47,7 @@ const margin = {left: 20, top: 20, right: 20, bottom: 20}
 
 export default {
   name: 'visualization',
-  props: ['data', 'width', 'height', 'year', 'student'],
+  props: ['data', 'width', 'height', 'student'],
   data() {
     return {
       students: [],
@@ -72,30 +72,32 @@ export default {
   },
   computed: {
     expanded() {
-      return this.student && this.students.length < 10
+      return !!this.student && this.students.length <= 24
     },
   },
   watch: {
-    year() {
-      this.animateOut(() => {
-        // reset svg container
-        // Object.assign(this.transform, {x: 0, y:0 })
-        // calculate and animate in next students
-        this.calculateStudents()
-        this.filterStudents()
-        this.positionStudents()
-        this.animateIn()
-      })
-    },
+    // year() {
+    //   this.animateOut(() => {
+    //     // reset svg container
+    //     // Object.assign(this.transform, {x: 0, y:0 })
+    //     // calculate and animate in next students
+    //     this.calculateStudents()
+    //     this.filterStudents()
+    //     this.positionStudents()
+    //     this.animateIn()
+    //   })
+    // },
     student() {
       this.filterStudents()
       this.positionStudents()
+      this.animateIn()
     },
   },
   methods: {
     calculateStudents() {
       this.allStudents = _.chain(this.data)
-        .filter(d => +d.year === this.year && d.colors)
+        .filter(d => d.colors)
+        .shuffle()
         .map((d, i) => {
           const colors = _.map(d.colors, (color, j) => {
             const lightness = chroma(color).hsl()[2]
@@ -107,8 +109,6 @@ export default {
               toY: this.yScale(lightness),
               r: this.sizeScale(j + 1),
               opacity: 0,
-              fadeIn: (4 - j) * 0.4 + i * 0.01,
-              fadeOut: i * 0.01,
             }
           })
 
@@ -116,6 +116,7 @@ export default {
           return {
             colors,
             name: d.name.split(' ')[0],
+            year: `${d.year}`.slice(2, 5),
             image: _.values(images[d.year][d.netID])[0],
             imageWidth: d.width, imageHeight: d.height,
             hue: ((hue + 120) % 360 + 10) || 0,
@@ -126,28 +127,37 @@ export default {
     },
     filterStudents() {
       if (!this.student) {
-        this.students = this.allStudents
+        this.students = _.take(this.allStudents, 52)
       } else {
-        this.students = _.filter(this.allStudents, d =>
-          _.includes(d.name.toLowerCase(), this.student))
+        this.students = _.chain(this.allStudents)
+          .filter(d => _.includes(d.name.toLowerCase(), this.student))
+          .take(24)
+          .value()
       }
 
       this.colors = _.chain(this.students).map('colors').flatten().value().reverse()
     },
     positionStudents() {
       // position students
-      const xPadding = (this.expanded ? 3.5 : 2.5) * largest
+      const xPadding = (this.expanded ? 3.5 : 2.25) * largest
       const yPadding = (this.expanded ? 4 : 3) * largest
       // figure out max number given height restriction
-      let perColumn = Math.floor((this.width - 1.5 * yPadding - 200) / yPadding)
-      // take minimum between perColumn and square root number
-      perColumn = Math.min(perColumn, Math.floor(Math.sqrt(this.students.length)))
-      const perRow = Math.ceil(this.students.length / perColumn)
-      const xOffset = (this.width - perRow * xPadding + 100) / 2
+      const perColumn = this.expanded ? 2 : 4
+      const perRow = Math.floor(this.students.length / perColumn)
+      const xOffset = (this.width - perRow * xPadding) / 2
       const yOffset = (this.height - perColumn * yPadding + 100) / 2
       _.chain(this.students)
         .sortBy(d => d.hue)
         .each((student, i) => {
+          // animate in gooeys
+          _.each(student.colors, (color, j) => {
+            Object.assign(color, {
+              fadeIn: (4 - j) * 0.4 + i * 0.01,
+              fadeOut: i * 0.01,
+            })
+          })
+
+          // position
           const column = Math.floor(i / perColumn)
           const x = column * xPadding +xOffset
           let y = (i % perColumn) * yPadding + yOffset
