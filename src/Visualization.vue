@@ -24,14 +24,13 @@
       </clipPath>
     </defs>
     <g :transform='`translate(${translate.x}, ${translate.y})`'>
-      <g v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'
+      <image v-for='d in students' :key='`image${d.netID}`' :xlink:href='d.image' :opacity='expanded ? 1 : 0'
+        :transform='`translate(${d.x - d.imageWidth + 10}, ${d.y - d.imageHeight + 20})`' />
+      <g v-for='d in students' :key='`gooey${d.netID}`' :transform='`translate(${d.x}, ${d.y})`'
         style='filter: url("#gooey")' :clip-path='`url(#flowerClip${d.netID})`'>
         <circle v-for='c in d.colors' :cx='c.x' :cy='c.y' :r='c.r'
           :fill='c.color' :opacity='c.opacity' />
       </g>
-      <circle v-for='d in students' :transform='`translate(${d.x}, ${d.y})`'
-        :r='1.5 * largest' opacity='0'
-        @mouseenter='updateHovered(d)' @mouseleave='updateHovered(null)' />
     </g>
   </svg>
 </template>
@@ -48,12 +47,13 @@ const margin = {left: 20, top: 20, right: 20, bottom: 20}
 
 export default {
   name: 'visualization',
-  props: ['data', 'width', 'height', 'year', 'updateHovered'],
+  props: ['data', 'width', 'height', 'year', 'student'],
   data() {
     return {
       students: [],
       translate: {x: 0, y: 0},
       largest,
+      imageOpacity: 0,
     }
   },
   mounted() {
@@ -65,20 +65,36 @@ export default {
       .force('collide', d3.forceCollide(d => d.r * 0.75))
       .stop()
 
-    this.calculateData()
+    this.calculateStudents()
+    this.filterStudents()
+    this.positionStudents()
     this.animateIn()
+  },
+  computed: {
+    expanded() {
+      return this.student && this.students.length < 10
+    },
   },
   watch: {
     year() {
       this.animateOut(() => {
-        this.calculateData()
+        // reset svg container
+        // Object.assign(this.transform, {x: 0, y:0 })
+        // calculate and animate in next students
+        this.calculateStudents()
+        this.filterStudents()
+        this.positionStudents()
         this.animateIn()
       })
     },
+    student() {
+      this.filterStudents()
+      this.positionStudents()
+    },
   },
   methods: {
-    calculateData() {
-      this.students = _.chain(this.data)
+    calculateStudents() {
+      this.allStudents = _.chain(this.data)
         .filter(d => +d.year === this.year && d.colors)
         .map((d, i) => {
           const colors = _.map(d.colors, (color, j) => {
@@ -101,16 +117,27 @@ export default {
             colors,
             name: d.name.split(' ')[0],
             image: _.values(images[d.year][d.netID])[0],
+            imageWidth: d.width, imageHeight: d.height,
             hue: ((hue + 120) % 360 + 10) || 0,
             lightness,
             netID: d.netID,
           }
         }).value()
-      this.colors = _.chain(this.students).map('colors').flatten().value().reverse()
+    },
+    filterStudents() {
+      if (!this.student) {
+        this.students = this.allStudents
+      } else {
+        this.students = _.filter(this.allStudents, d =>
+          _.includes(d.name.toLowerCase(), this.student))
+      }
 
+      this.colors = _.chain(this.students).map('colors').flatten().value().reverse()
+    },
+    positionStudents() {
       // position students
-      const xPadding = 2.5 * largest
-      const yPadding = 3 * largest
+      const xPadding = (this.expanded ? 3.5 : 2.5) * largest
+      const yPadding = (this.expanded ? 4 : 3) * largest
       // figure out max number given height restriction
       let perColumn = Math.floor((this.width - 1.5 * yPadding - 200) / yPadding)
       // take minimum between perColumn and square root number
@@ -125,7 +152,9 @@ export default {
           const x = column * xPadding +xOffset
           let y = (i % perColumn) * yPadding + yOffset
           y += (column % 2 ? 0 : yPadding / 2) // offset by column
-          Object.assign(student, {x, y})
+          Object.assign(student, {
+            x, y
+          })
         }).value()
     },
     animateIn() {
@@ -151,13 +180,6 @@ export default {
             callback()
           }
         },
-      })
-    },
-    dragContainer() {
-      const {dx} = d3.event
-      Object.assign(this.translate, {
-        x: this.translate.x + dx,
-        // y: this.translate.y + dy,
       })
     },
   },
