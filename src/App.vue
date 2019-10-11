@@ -13,13 +13,12 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import Visualization from './Visualization.vue'
-import Years from './Years.vue'
 
 import data from '../data/studentsWithPhotos.json'
 
 export default {
   name: 'app',
-  components: {Visualization, Years},
+  components: {Visualization},
   data() {
     return {
       data: _.map(data, d => Object.assign(d, {year: +d.year})),
@@ -27,16 +26,7 @@ export default {
       height: window.innerHeight,
       student: '',
       year: 2019,
-      hovered: null,
     }
-  },
-  methods: {
-    updateYear(year) {
-      this.year = year
-    },
-    updateHovered(hovered) {
-      this.hovered = hovered
-    },
   },
 }
 </script>
