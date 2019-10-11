@@ -2,7 +2,7 @@
   <div id="app">
     <Visualization v-bind='{data, width, height, student}'></Visualization>
     <div id='inputs'>
-      <input id='name' type='text' placeholder='red burns' v-model='student' />
+      <input id='name' type='text' placeholder='red burns' v-model='student' autofocus />
     </div>
   </div>
 </template>
