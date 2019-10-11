@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel index.html",
+    "predeploy": "rm -rf dist && parcel build index.html --public-url /itp-yearbook",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@vue/component-compiler-utils": "^2.6.0",
+    "cssnano": "^4.1.10",
     "get-image-colors": "^2.0.0",
     "gm": "^1.23.1",
     "request": "^2.88.0",
